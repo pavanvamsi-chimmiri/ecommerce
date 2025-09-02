@@ -52,36 +52,27 @@
 
 ### 3. Core Features - Customer Side [ ]
 
-- [ ] Home Layout:
-  - Create `(home)` folder in `app` directory
-  - Header with logo, search bar, and navigation
-  - Footer with links and social media
-- [ ] Homepage:
-  - banner carousel
-  - latest products
+- [X] Home Layout:
+  - [X] Create '(home)' folder in 'app' directory
+  - [X] Header with logo, search bar, and navigation
+  - [X] Footer with links and social media
+- [X] Homepage:
+  - [X] banner carousel
+  - [X] latest products
 - [ ] Products Catalog:
   - Sidebar with categories and filters
   - Search results
   - Product grid
   - Pagination
 - [ ] Product pages:
-  - Create product detail page layout
-  - Implement image gallery with thumbnails
-  - Add product information section:
-    - Title, price, description
-    - Stock status
-    - Add to cart button
-  - Reviews and ratings section:
-    - Display existing reviews
-    - Add review form for authenticated users
-    - Star rating component
-  - Related products section:
-    - Show products from same category
-    - Product card carousel
+  - Product details
+  - Image gallery
+  - Reviews and ratings
+  - Related products
 - [ ] Shopping cart:
   - Add/remove items
   - Update quantities
-  - Cart persistence
+  - Cart persistance
 - [ ] Checkout process:
   - Shipping information
   - Payment integration (Stripe)
@@ -90,7 +81,7 @@
   - Order history
   - Profile management
   - Saved addresses
-  - Wishlist
+  - Wishlist
 
 ### 4. Admin Dashboard [ ]
 
