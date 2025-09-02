@@ -44,11 +44,11 @@
   - [X] Order model
   - [X] Review model
   - [X] Cart model
-- [ ] Implement NextAuth.js authentication:
-  - Email/Password
-  - OAuth providers (Google, GitHub)
-  - JWT handling
-  - Protected routes
+- [X] Implement NextAuth.js authentication:
+  - [X] Email/Password
+  - [X] OAuth providers (Google, GitHub)
+  - [X] JWT handling
+  - [X] Protected routes
 
 ### 3. Core Features - Customer Side [ ]
 
