@@ -36,14 +36,14 @@
 
 ### 2. Database and Authentication [ ]
 
-- [ ] Set up PostgreSQL database
-- [ ] Configure Prisma schema:
-  - User model
-  - Product model
-  - Category model
-  - Order model
-  - Review model
-  - Cart model
+- [X] Set up PostgreSQL database
+- [X] Configure Prisma schema:
+  - [X] User model
+  - [X] Product model
+  - [X] Category model
+  - [X] Order model
+  - [X] Review model
+  - [X] Cart model
 - [ ] Implement NextAuth.js authentication:
   - Email/Password
   - OAuth providers (Google, GitHub)
