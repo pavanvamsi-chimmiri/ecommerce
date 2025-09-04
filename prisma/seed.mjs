@@ -44,6 +44,14 @@ async function main() {
     categoryMap[c.slug] = created.id;
   }
 
+  // Remove deprecated products (cleanup)
+  await prisma.product.deleteMany({ where: { slug: { in: [
+    "wireless-headphones",
+    "smart-watch",
+  ] } } });
+  // Optionally remove the electronics category if empty
+  await prisma.category.deleteMany({ where: { slug: "electronics", products: { none: {} } } });
+
   // Products per category (2 each) using images in public/images
   const products = [
     // T-shirts
@@ -121,31 +129,7 @@ async function main() {
       ],
       quantity: 50,
     },
-    // Electronics (using available placeholder apparel images for demo)
-    {
-      title: "Wireless Headphones",
-      slug: "wireless-headphones",
-      description: "Over-ear wireless Bluetooth headphones.",
-      price: 129.99,
-      categorySlug: "electronics",
-      images: [
-        { url: "/window.svg", alt: "Wireless Headphones illustration" },
-        { url: "/globe.svg", alt: "Wireless Headphones packaging" },
-      ],
-      quantity: 40,
-    },
-    {
-      title: "Smart Watch",
-      slug: "smart-watch",
-      description: "Fitness and notifications on your wrist.",
-      price: 199.99,
-      categorySlug: "electronics",
-      images: [
-        { url: "/file.svg", alt: "Smart Watch illustration" },
-        { url: "/vercel.svg", alt: "Smart Watch box" },
-      ],
-      quantity: 55,
-    },
+    // (Electronics removed)
     // Fashion (generic fashion items)
     {
       title: "Summer Dress",
