@@ -19,7 +19,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const isInStock = (product.inventory?.quantity ?? 0) > 0;
-  const mainImage = product.images[0]?.url || "/placeholder.png";
+  const candidateUrl = product.images[0]?.url;
+  const mainImage = !candidateUrl || candidateUrl === "/placeholder.png" ? "/next.svg" : candidateUrl;
   const price = Number(product.price);
 
   return (
@@ -30,6 +31,8 @@ export function ProductCard({ product }: ProductCardProps) {
             src={mainImage}
             alt={product.images[0]?.alt || product.title}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized
             className="object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />

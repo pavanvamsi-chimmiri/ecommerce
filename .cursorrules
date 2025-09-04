@@ -59,11 +59,11 @@
 - [X] Homepage:
   - [X] banner carousel
   - [X] latest products
-- [ ] Products Catalog:
-  - Sidebar with categories and filters
-  - Search results
-  - Product grid
-  - Pagination
+- [X] Products Catalog:
+  - [X] Sidebar with categories and filters
+  - [X] Search results
+  - [X] Product grid
+  - [X] Pagination
 - [ ] Product pages:
   - Product details
   - Image gallery

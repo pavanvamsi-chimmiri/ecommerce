@@ -29,6 +29,9 @@ async function main() {
     { name: "T-shirts", slug: "t-shirts" },
     { name: "Jeans", slug: "jeans" },
     { name: "Shoes", slug: "shoes" },
+    { name: "Electronics", slug: "electronics" },
+    { name: "Fashion", slug: "fashion" },
+    { name: "Home", slug: "home" },
   ];
 
   const categoryMap = {};
@@ -117,6 +120,81 @@ async function main() {
         { url: "/images/p32-2.jpg", alt: "Running Trainers sole" },
       ],
       quantity: 50,
+    },
+    // Electronics (using available placeholder apparel images for demo)
+    {
+      title: "Wireless Headphones",
+      slug: "wireless-headphones",
+      description: "Over-ear wireless Bluetooth headphones.",
+      price: 129.99,
+      categorySlug: "electronics",
+      images: [
+        { url: "/window.svg", alt: "Wireless Headphones illustration" },
+        { url: "/globe.svg", alt: "Wireless Headphones packaging" },
+      ],
+      quantity: 40,
+    },
+    {
+      title: "Smart Watch",
+      slug: "smart-watch",
+      description: "Fitness and notifications on your wrist.",
+      price: 199.99,
+      categorySlug: "electronics",
+      images: [
+        { url: "/file.svg", alt: "Smart Watch illustration" },
+        { url: "/vercel.svg", alt: "Smart Watch box" },
+      ],
+      quantity: 55,
+    },
+    // Fashion (generic fashion items)
+    {
+      title: "Summer Dress",
+      slug: "summer-dress",
+      description: "Lightweight summer dress for everyday wear.",
+      price: 39.99,
+      categorySlug: "fashion",
+      images: [
+        { url: "/images/p21-1.jpg", alt: "Summer Dress front" },
+        { url: "/images/p21-2.jpg", alt: "Summer Dress back" },
+      ],
+      quantity: 75,
+    },
+    {
+      title: "Leather Belt",
+      slug: "leather-belt",
+      description: "Genuine leather belt with classic buckle.",
+      price: 24.99,
+      categorySlug: "fashion",
+      images: [
+        { url: "/images/p22-1.jpg", alt: "Leather Belt front" },
+        { url: "/images/p22-2.jpg", alt: "Leather Belt detail" },
+      ],
+      quantity: 120,
+    },
+    // Home (home essentials)
+    {
+      title: "Cotton Bedsheet",
+      slug: "cotton-bedsheet",
+      description: "Queen size soft cotton bedsheet.",
+      price: 34.99,
+      categorySlug: "home",
+      images: [
+        { url: "/images/p31-1.jpg", alt: "Cotton Bedsheet folded" },
+        { url: "/images/p31-2.jpg", alt: "Cotton Bedsheet texture" },
+      ],
+      quantity: 90,
+    },
+    {
+      title: "Ceramic Vase",
+      slug: "ceramic-vase",
+      description: "Minimal ceramic vase for decor.",
+      price: 19.99,
+      categorySlug: "home",
+      images: [
+        { url: "/images/p32-1.jpg", alt: "Ceramic Vase front" },
+        { url: "/images/p32-2.jpg", alt: "Ceramic Vase detail" },
+      ],
+      quantity: 110,
     },
   ];
 
