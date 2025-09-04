@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,21 +26,21 @@ export function Carousel({
 }: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const next = () => {
-    setCurrentIndex((current) => 
+  const next = useCallback(() => {
+    setCurrentIndex((current) =>
       current === images.length - 1 ? 0 : current + 1
     );
-  };
+  }, [images.length]);
 
-  const previous = () => {
-    setCurrentIndex((current) => 
+  const previous = useCallback(() => {
+    setCurrentIndex((current) =>
       current === 0 ? images.length - 1 : current - 1
     );
-  };
+  }, [images.length]);
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
-  };
+  }, []);
 
   useEffect(() => {
     if (!autoPlay) return;
@@ -49,7 +50,7 @@ export function Carousel({
     }, interval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, autoPlay, interval]);
+  }, [autoPlay, interval, next]);
 
   return (
     <div className={cn("relative w-full h-96 overflow-hidden rounded-lg", className)}>
@@ -63,10 +64,13 @@ export function Carousel({
               index === currentIndex ? "opacity-100" : "opacity-0"
             )}
           >
-            <img
+            <Image
               src={image.src}
               alt={image.alt}
-              className="w-full h-full object-cover"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority={index === currentIndex}
             />
             {(image.title || image.description) && (
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

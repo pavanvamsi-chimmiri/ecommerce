@@ -58,7 +58,7 @@ export default function SignUpPage() {
         router.push("/auth/signin?message=account-created");
       }, 2000);
       
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
       setIsLoading(false);
     }

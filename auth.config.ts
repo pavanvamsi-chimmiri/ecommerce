@@ -1,7 +1,8 @@
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
-import type { NextAuthConfig } from "next-auth";
+import type { NextAuthConfig, Session, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 
 export default {
   providers: [
@@ -11,14 +12,16 @@ export default {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials: any) {
-        if (!credentials?.email || !credentials?.password) {
+      async authorize(credentials) {
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+        if (!email || !password) {
           return null;
         }
 
         // For now, allow login with hardcoded credentials
         // In production, you should hash passwords and compare them
-        if (credentials.email === "admin@example.com" && credentials.password === "admin") {
+        if (email === "admin@example.com" && password === "admin") {
           return {
             id: "admin",
             email: "admin@example.com",
@@ -27,7 +30,7 @@ export default {
           };
         }
 
-        if (credentials.email === "alice@example.com" && credentials.password === "alice") {
+        if (email === "alice@example.com" && password === "alice") {
           return {
             id: "alice",
             email: "alice@example.com",
@@ -36,7 +39,7 @@ export default {
           };
         }
 
-        if (credentials.email === "bob@example.com" && credentials.password === "bob") {
+        if (email === "bob@example.com" && password === "bob") {
           return {
             id: "bob",
             email: "bob@example.com",
@@ -52,15 +55,18 @@ export default {
     GitHub,
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: JWT; user?: User | null }) {
       if (user) {
-        token.role = user.role;
+        (token as JWT).role = (user as User & { role?: string }).role as
+          | "ADMIN"
+          | "CUSTOMER"
+          | undefined;
       }
       return token;
     },
-    async session({ session, token }: any) {
-      if (token) {
-        session.user.role = token.role;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      if (session.user) {
+        session.user.role = token.role as "ADMIN" | "CUSTOMER" | undefined;
       }
       return session;
     }
