@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cart-store";
+import { showToast } from "@/lib/toast";
 
 interface ProductCardProps {
   product: {
@@ -41,6 +42,10 @@ export function ProductCard({ product }: ProductCardProps) {
     });
     
     openCart();
+    showToast({
+      title: "Added to cart",
+      description: `${product.title} has been added to your cart`,
+    });
   };
 
   return (

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCartStore } from "@/lib/stores/cart-store";
 import { ShoppingCart, CreditCard } from "lucide-react";
+import { showToast } from "@/lib/toast";
 
 interface ProductActionsProps {
   product: {
@@ -33,6 +34,10 @@ export function ProductActions({ product }: ProductActionsProps) {
     
     // Open cart sidebar to show the added item
     openCart();
+    showToast({
+      title: "Added to cart",
+      description: `${product.title} has been added to your cart`,
+    });
   };
 
   const handleBuyNow = () => {
@@ -49,6 +54,10 @@ export function ProductActions({ product }: ProductActionsProps) {
     // Redirect to checkout (we'll implement this later)
     // For now, just open the cart
     openCart();
+    showToast({
+      title: "Added to cart",
+      description: `${product.title} has been added to your cart`,
+    });
   };
 
   const isOutOfStock = !product.inventory || product.inventory.quantity === 0;
