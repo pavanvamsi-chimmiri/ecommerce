@@ -1,17 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart } from "lucide-react";
-import { Decimal } from "@prisma/client/runtime/library";
+import { useCartStore } from "@/lib/stores/cart-store";
 
 interface ProductCardProps {
   product: {
     id: string;
     title: string;
     slug: string;
-    price: Decimal;
+    price: number;
     images: { url: string; alt: string | null }[];
     inventory?: { quantity: number } | null;
   };
@@ -21,7 +23,25 @@ export function ProductCard({ product }: ProductCardProps) {
   const isInStock = (product.inventory?.quantity ?? 0) > 0;
   const candidateUrl = product.images[0]?.url;
   const mainImage = !candidateUrl || candidateUrl === "/placeholder.png" ? "/next.svg" : candidateUrl;
-  const price = Number(product.price);
+  const price = product.price;
+  
+  const { addItem, openCart } = useCartStore();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addItem({
+      id: product.id,
+      productId: product.id,
+      title: product.title,
+      price: price,
+      image: mainImage,
+      slug: product.slug,
+    });
+    
+    openCart();
+  };
 
   return (
     <Card className="group overflow-hidden">
@@ -69,6 +89,7 @@ export function ProductCard({ product }: ProductCardProps) {
             size="sm" 
             disabled={!isInStock}
             className="h-8 px-3"
+            onClick={handleAddToCart}
           >
             <ShoppingCart className="h-4 w-4 mr-1" />
             Add to Cart

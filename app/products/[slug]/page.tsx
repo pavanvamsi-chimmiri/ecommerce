@@ -1,43 +1,142 @@
-import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
+import { ProductActions } from "@/components/product/product-actions";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Mock data for products
+const mockProducts = [
+  {
+    id: "1",
+    title: "Classic White Tee",
+    slug: "classic-white-tee",
+    price: 19.99,
+    description: "A comfortable and versatile white t-shirt made from 100% cotton. Perfect for everyday wear.",
+    images: [
+      { url: "/images/p11-1.jpg", alt: "Classic White Tee front" },
+      { url: "/images/p11-2.jpg", alt: "Classic White Tee back" }
+    ],
+    inventory: { quantity: 100 },
+    category: { name: "T-Shirts" },
+    reviews: [
+      { rating: 5 },
+      { rating: 4 },
+      { rating: 5 }
+    ]
+  },
+  {
+    id: "2",
+    title: "Graphic Black Tee",
+    slug: "graphic-black-tee",
+    price: 24.99,
+    description: "A stylish black t-shirt with a modern graphic design. Made from premium cotton blend.",
+    images: [
+      { url: "/images/p12-1.jpg", alt: "Graphic Black Tee front" },
+      { url: "/images/p12-2.jpg", alt: "Graphic Black Tee back" }
+    ],
+    inventory: { quantity: 80 },
+    category: { name: "T-Shirts" },
+    reviews: [
+      { rating: 4 },
+      { rating: 5 }
+    ]
+  },
+  {
+    id: "3",
+    title: "Slim Fit Jeans",
+    slug: "slim-fit-jeans",
+    price: 49.99,
+    description: "Modern slim fit jeans with a comfortable stretch. Perfect for casual and semi-formal occasions.",
+    images: [
+      { url: "/images/p21-1.jpg", alt: "Slim Fit Jeans front" },
+      { url: "/images/p21-2.jpg", alt: "Slim Fit Jeans back" }
+    ],
+    inventory: { quantity: 60 },
+    category: { name: "Jeans" },
+    reviews: [
+      { rating: 5 },
+      { rating: 4 },
+      { rating: 5 },
+      { rating: 4 }
+    ]
+  },
+  {
+    id: "4",
+    title: "Relaxed Fit Jeans",
+    slug: "relaxed-fit-jeans",
+    price: 44.99,
+    description: "Comfortable relaxed fit jeans with a classic look. Made from durable denim.",
+    images: [
+      { url: "/images/p22-1.jpg", alt: "Relaxed Fit Jeans front" },
+      { url: "/images/p22-2.jpg", alt: "Relaxed Fit Jeans back" }
+    ],
+    inventory: { quantity: 70 },
+    category: { name: "Jeans" },
+    reviews: [
+      { rating: 4 },
+      { rating: 5 }
+    ]
+  },
+  {
+    id: "5",
+    title: "Everyday Sneakers",
+    slug: "everyday-sneakers",
+    price: 59.99,
+    description: "Comfortable everyday sneakers with excellent cushioning and support. Perfect for daily wear.",
+    images: [
+      { url: "/images/p31-1.jpg", alt: "Everyday Sneakers side" },
+      { url: "/images/p31-2.jpg", alt: "Everyday Sneakers front" }
+    ],
+    inventory: { quantity: 90 },
+    category: { name: "Shoes" },
+    reviews: [
+      { rating: 5 },
+      { rating: 5 },
+      { rating: 4 }
+    ]
+  },
+  {
+    id: "6",
+    title: "Running Trainers",
+    slug: "running-trainers",
+    price: 79.99,
+    description: "High-performance running trainers with advanced cushioning technology. Ideal for athletes.",
+    images: [
+      { url: "/images/p32-1.jpg", alt: "Running Trainers side" },
+      { url: "/images/p32-2.jpg", alt: "Running Trainers front" }
+    ],
+    inventory: { quantity: 50 },
+    category: { name: "Shoes" },
+    reviews: [
+      { rating: 5 },
+      { rating: 4 },
+      { rating: 5 },
+      { rating: 4 },
+      { rating: 5 }
+    ]
+  }
+];
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      images: { orderBy: { position: "asc" } },
-      inventory: true,
-      category: true,
-      reviews: true,
-    },
-  });
+  const product = mockProducts.find(p => p.slug === slug);
+  
+  if (!product) notFound();
 
-  if (!product || !product.active) notFound();
-
-  const related = await prisma.product.findMany({
-    where: { categoryId: product.categoryId, id: { not: product.id }, active: true },
-    include: { images: { orderBy: { position: "asc" }, take: 1 }, inventory: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
+  // Find related products (same category, excluding current product)
+  const related = mockProducts
+    .filter(p => p.category.name === product.category.name && p.id !== product.id)
+    .slice(0, 6);
 
   const mainImage = product.images[0]?.url ?? "/next.svg";
-  const averageRating =
-    product.reviews.length > 0
-      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
-      : 0;
+  const averageRating = product.reviews.length > 0
+    ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
+    : 0;
 
   return (
     <div className="container py-8 space-y-12">
@@ -48,8 +147,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-3 mt-3">
-              {product.images.slice(0, 8).map((img) => (
-                <div key={img.id} className="relative aspect-square rounded overflow-hidden border">
+              {product.images.slice(0, 8).map((img, index) => (
+                <div key={index} className="relative aspect-square rounded overflow-hidden border">
                   <Image src={img.url} alt={img.alt ?? product.title} fill className="object-cover" unoptimized />
                 </div>
               ))}
@@ -68,12 +167,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {product.description && <p className="leading-relaxed">{product.description}</p>}
 
           <div className="flex items-center gap-3 pt-2">
-            <div className="flex items-center gap-2">
-              <label htmlFor="qty" className="text-sm text-muted-foreground">Qty</label>
-              <Input id="qty" type="number" min={1} defaultValue={1} className="w-20" />
-            </div>
-            <Button>Add to cart</Button>
-            <Button variant="outline">Buy now</Button>
+            <ProductActions 
+              product={{
+                id: product.id,
+                title: product.title,
+                slug: product.slug,
+                price: Number(product.price),
+                image: mainImage,
+                inventory: product.inventory,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -93,7 +196,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   id: p.id,
                   title: p.title,
                   slug: p.slug,
-                  price: p.price,
+                  price: Number(p.price),
                   images: p.images.map((img) => ({ url: img.url, alt: img.alt ?? null })),
                   inventory: p.inventory ? { quantity: p.inventory.quantity } : null,
                 }}
@@ -105,6 +208,3 @@ export default async function ProductPage({ params }: ProductPageProps) {
     </div>
   );
 }
-
-
-

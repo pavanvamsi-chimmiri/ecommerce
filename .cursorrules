@@ -64,15 +64,15 @@
   - [X] Search results
   - [X] Product grid
   - [X] Pagination
-- [ ] Product pages:
-  - Product details
-  - Image gallery
-  - Reviews and ratings
-  - Related products
-- [ ] Shopping cart:
-  - Add/remove items
-  - Update quantities
-  - Cart persistance
+- [X] Product pages:
+  - [X] Product details
+  - [X] Image gallery
+  - [X] Reviews and ratings
+  - [X] Related products
+- [X] Shopping cart:
+  - [X] Add/remove items
+  - [X] Update quantities
+  - [X] Cart persistence
 - [ ] Checkout process:
   - Shipping information
   - Payment integration (Stripe)

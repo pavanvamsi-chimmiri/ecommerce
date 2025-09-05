@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel } from "@/components/ui/carousel";
 import { ProductCard } from "@/components/product-card";
-import { Decimal } from "@prisma/client/runtime/library";
 import Link from "next/link";
 
 // Mock data for latest products
@@ -11,7 +10,7 @@ const mockProducts = [
     id: "1",
     title: "Classic White Tee",
     slug: "classic-white-tee",
-    price: new Decimal(19.99),
+    price: 19.99,
     images: [{ url: "/images/p11-1.jpg", alt: "Classic White Tee front" }],
     inventory: { quantity: 100 },
   },
@@ -19,7 +18,7 @@ const mockProducts = [
     id: "2",
     title: "Graphic Black Tee",
     slug: "graphic-black-tee",
-    price: new Decimal(24.99),
+    price: 24.99,
     images: [{ url: "/images/p12-1.jpg", alt: "Graphic Black Tee front" }],
     inventory: { quantity: 80 },
   },
@@ -27,7 +26,7 @@ const mockProducts = [
     id: "3",
     title: "Slim Fit Jeans",
     slug: "slim-fit-jeans",
-    price: new Decimal(49.99),
+    price: 49.99,
     images: [{ url: "/images/p21-1.jpg", alt: "Slim Fit Jeans front" }],
     inventory: { quantity: 60 },
   },
@@ -35,7 +34,7 @@ const mockProducts = [
     id: "4",
     title: "Relaxed Fit Jeans",
     slug: "relaxed-fit-jeans",
-    price: new Decimal(44.99),
+    price: 44.99,
     images: [{ url: "/images/p22-1.jpg", alt: "Relaxed Fit Jeans front" }],
     inventory: { quantity: 70 },
   },
@@ -43,7 +42,7 @@ const mockProducts = [
     id: "5",
     title: "Everyday Sneakers",
     slug: "everyday-sneakers",
-    price: new Decimal(59.99),
+    price: 59.99,
     images: [{ url: "/images/p31-1.jpg", alt: "Everyday Sneakers side" }],
     inventory: { quantity: 90 },
   },
@@ -51,7 +50,7 @@ const mockProducts = [
     id: "6",
     title: "Running Trainers",
     slug: "running-trainers",
-    price: new Decimal(79.99),
+    price: 79.99,
     images: [{ url: "/images/p32-1.jpg", alt: "Running Trainers side" }],
     inventory: { quantity: 50 },
   },
@@ -114,7 +113,17 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={{
+                id: product.id,
+                title: product.title,
+                slug: product.slug,
+                price: Number(product.price),
+                images: product.images,
+                inventory: product.inventory,
+              }} 
+            />
           ))}
         </div>
       </section>

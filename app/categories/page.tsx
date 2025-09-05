@@ -1,13 +1,17 @@
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function CategoriesPage() {
-  const categories = await prisma.category.findMany({
-    where: { slug: { not: "electronics" } },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
-  });
+  const categories = [
+    { id: "1", name: "T-Shirts", slug: "t-shirts" },
+    { id: "2", name: "Jeans", slug: "jeans" },
+    { id: "3", name: "Shoes", slug: "shoes" },
+    { id: "4", name: "Accessories", slug: "accessories" },
+    { id: "5", name: "Hoodies", slug: "hoodies" },
+    { id: "6", name: "Shorts", slug: "shorts" },
+    { id: "7", name: "Dress Shirts", slug: "dress-shirts" },
+    { id: "8", name: "Athletic Wear", slug: "athletic-wear" },
+  ];
 
   return (
     <div className="container py-8">
@@ -17,7 +21,7 @@ export default async function CategoriesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((c) => {
-            const href = c.slug === "home" ? "/" : `/products?category=${encodeURIComponent(c.slug)}&page=1`;
+            const href = `/products?category=${encodeURIComponent(c.slug)}&page=1`;
             return (
               <Link key={c.id} href={href}>
                 <Card className="hover:border-primary transition-colors">
@@ -33,5 +37,3 @@ export default async function CategoriesPage() {
     </div>
   );
 }
-
-
