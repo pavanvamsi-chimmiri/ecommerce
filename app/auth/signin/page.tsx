@@ -38,18 +38,24 @@ function SignInPageInner() {
         redirect: false,
       });
 
+      console.log("Sign in result:", result);
+
       if (result?.error) {
         setError("Invalid email or password");
-      } else {
+      } else if (result?.ok) {
+        setSuccessMessage("Successfully signed in! Redirecting...");
+        
         // Get the updated session
         const session = await getSession();
-        if (session?.user?.role === "ADMIN") {
-          router.push("/admin");
-        } else {
-          router.push("/");
-        }
+        console.log("Session after sign in:", session);
+        
+        // Redirect all users to home page after sign-in
+        router.push("/");
+      } else {
+        setError("Sign in failed. Please try again.");
       }
-    } catch {
+    } catch (error) {
+      console.error("Sign in error:", error);
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -57,11 +63,11 @@ function SignInPageInner() {
   };
 
   const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
+    setError("Google sign-in is not configured yet. Please use email/password.");
   };
 
   const handleGitHubSignIn = () => {
-    signIn("github", { callbackUrl: "/" });
+    setError("GitHub sign-in is not configured yet. Please use email/password.");
   };
 
   return (

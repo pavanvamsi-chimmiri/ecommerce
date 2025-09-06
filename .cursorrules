@@ -73,10 +73,10 @@
   - [X] Add/remove items
   - [X] Update quantities
   - [X] Cart persistence
-- [ ] Checkout process:
-  - Shipping information
-  - Payment integration (Stripe)
-  - Order confirmation
+- [X] Checkout process:
+  - [X] Shipping information
+  - [X] Payment integration (Stripe)
+  - [X] Order confirmation
 - [ ] User dashboard:
   - Order history
   - Profile management

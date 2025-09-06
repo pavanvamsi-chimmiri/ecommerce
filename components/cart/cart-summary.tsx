@@ -6,7 +6,7 @@ import { useCartStore } from "@/lib/stores/cart-store";
 import Link from "next/link";
 
 export function CartSummary() {
-  const { getTotalItems, getTotalPrice, clearCart } = useCartStore();
+  const { getTotalItems, getTotalPrice, clearCart, closeCart } = useCartStore();
   
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
@@ -67,13 +67,25 @@ export function CartSummary() {
         </div>
 
         <div className="space-y-2">
-          <Link href="/checkout" className="block">
+          <Link href="/checkout" className="block" onClick={(e) => {
+            e.preventDefault();
+            closeCart();
+            setTimeout(() => {
+              window.location.href = '/checkout';
+            }, 100);
+          }}>
             <Button className="w-full" size="lg">
               Proceed to Checkout
             </Button>
           </Link>
           
-          <Link href="/products" className="block">
+          <Link href="/products" className="block" onClick={(e) => {
+            e.preventDefault();
+            closeCart();
+            setTimeout(() => {
+              window.location.href = '/products';
+            }, 100);
+          }}>
             <Button variant="outline" className="w-full">
               Continue Shopping
             </Button>

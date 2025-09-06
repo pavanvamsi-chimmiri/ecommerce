@@ -1,4 +1,3 @@
-// Prisma schema for ecommerce app with NextAuth and admin dashboard
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,28 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  CUSTOMER
-}
-
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
-  role          Role      @default(CUSTOMER)
-  addresses     Address[]
+  role          Role       @default(CUSTOMER)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   accounts      Account[]
-  sessions      Session[]
+  addresses     Address[]
+  auditLogs     AuditLog[]
   cart          Cart?
   orders        Order[]
   reviews       Review[]
+  sessions      Session[]
   wishlistItems Wishlist[]
-  auditLogs     AuditLog[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
 }
 
 model Account {
@@ -71,11 +65,11 @@ model Category {
   name      String
   slug      String     @unique
   parentId  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children  Category[] @relation("CategoryToCategory")
   products  Product[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
 }
 
 model Product {
@@ -87,40 +81,40 @@ model Product {
   sku         String?        @unique
   active      Boolean        @default(true)
   categoryId  String
-  category    Category       @relation(fields: [categoryId], references: [id])
-  images      ProductImage[]
-  inventory   Inventory?
-  reviews     Review[]
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  wishlists   Wishlist[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  cartItems   CartItem[]
+  inventory   Inventory?
+  orderItems  OrderItem[]
+  category    Category       @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  reviews     Review[]
+  wishlists   Wishlist[]
 }
 
 model ProductImage {
   id        String  @id @default(cuid())
   url       String
   alt       String?
-  position  Int      @default(0)
+  position  Int     @default(0)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Inventory {
-  id         String  @id @default(cuid())
-  productId  String  @unique
-  quantity   Int     @default(0)
-  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  productId String  @unique
+  quantity  Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Cart {
   id        String     @id @default(cuid())
   userId    String?    @unique
-  user      User?      @relation(fields: [userId], references: [id])
-  items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  user      User?      @relation(fields: [userId], references: [id])
+  items     CartItem[]
 }
 
 model CartItem {
@@ -150,18 +144,18 @@ model Address {
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  userId        String
-  addressId     String
-  status        String      @default("Pending")
-  total         Decimal
-  paymentId     String?
-  items         OrderItem[]
-  user          User        @relation(fields: [userId], references: [id])
-  address       Address     @relation(fields: [addressId], references: [id])
-  payment       Payment?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id        String      @id @default(cuid())
+  userId    String
+  addressId String
+  status    String      @default("Pending")
+  total     Decimal
+  paymentId String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  address   Address     @relation(fields: [addressId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  payment   Payment?
 }
 
 model OrderItem {
@@ -175,15 +169,15 @@ model OrderItem {
 }
 
 model Payment {
-  id             String   @id @default(cuid())
-  orderId        String   @unique
-  provider       String   @default("stripe")
-  providerRef    String?
-  amount         Decimal
-  currency       String   @default("usd")
-  status         String   @default("pending")
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  provider    String   @default("stripe")
+  providerRef String?
+  amount      Decimal
+  currency    String   @default("usd")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Review {
@@ -193,17 +187,18 @@ model Review {
   rating    Int
   title     String?
   content   String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Wishlist {
   id        String  @id @default(cuid())
   userId    String
   productId String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, productId])
 }
 
@@ -216,4 +211,7 @@ model AuditLog {
   user      User?    @relation(fields: [userId], references: [id])
 }
 
-
+enum Role {
+  ADMIN
+  CUSTOMER
+}

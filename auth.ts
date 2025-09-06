@@ -1,4 +1,6 @@
 import NextAuth from "next-auth"
+// import Google from "next-auth/providers/google"
+// import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 import type { Session, User } from "next-auth"
 import type { JWT } from "next-auth/jwt"
@@ -49,7 +51,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         return null;
       }
-    })
+    }),
+    // Google and GitHub providers temporarily disabled until OAuth credentials are configured
+    // Google,
+    // GitHub,
   ],
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | null }) {
@@ -64,6 +69,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.role = token.role as "ADMIN" | "CUSTOMER" | undefined;
+        // Ensure user id is available in session for server routes
+        // next-auth stores the user id in token.sub
+        (session.user as any).id = (token as any).sub as string | undefined;
       }
       return session;
     }
