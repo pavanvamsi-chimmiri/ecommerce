@@ -12,6 +12,12 @@ export default async function DashboardPage() {
     return <div>Loading...</div>;
   }
 
+  // Fetch user from DB to get createdAt
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { createdAt: true, name: true, email: true }
+  });
+
   // Get user statistics
   const [orderCount, addressCount, wishlistCount] = await Promise.all([
     prisma.order.count({
@@ -50,8 +56,9 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-900">
           Welcome back, {session.user.name || session.user.email}!
         </h1>
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
         <p className="text-gray-600 mt-2">
-          Here's what's happening with your account.
+          Stay up to date with your recent activity, orders, and account details below.
         </p>
       </div>
 
@@ -99,14 +106,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Account Status</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <Badge variant="secondary">Active</Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              <Badge variant="secondary">Active</Badge>
-            </div>
             <p className="text-xs text-muted-foreground">
-              Member since {new Date(session.user.createdAt || Date.now()).toLocaleDateString()}
+              Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Unknown"}
             </p>
           </CardContent>
         </Card>

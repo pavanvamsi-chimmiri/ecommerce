@@ -65,7 +65,7 @@ export default async function OrdersPage() {
             <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
             <p className="text-muted-foreground mb-6">
-              You haven't placed any orders yet. Start shopping to see your order history here.
+              You have not placed any orders yet. Start shopping to see your order history here.
             </p>
             <Link href="/products">
               <Button>Browse Products</Button>

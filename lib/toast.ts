@@ -5,6 +5,7 @@ export type ToastPayload = {
   title?: string;
   description?: string;
   durationMs?: number;
+  variant?: "default" | "destructive";
 };
 
 const TOAST_EVENT = "__app_toast_event__";

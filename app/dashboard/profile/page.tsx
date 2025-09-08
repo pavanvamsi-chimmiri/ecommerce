@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Calendar, Save } from "lucide-react";
-import { toast } from "@/lib/toast";
+import { showToast } from "@/lib/toast";
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
@@ -35,12 +35,12 @@ export default function ProfilePage() {
       // For now, we'll just show a success message
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       
-      toast({
+      showToast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
     } catch (error) {
-      toast({
+      showToast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive",

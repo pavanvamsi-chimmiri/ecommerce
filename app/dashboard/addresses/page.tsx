@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Plus, Edit, Trash2, Check } from "lucide-react";
-import { toast } from "@/lib/toast";
+import { showToast } from "@/lib/toast";
 
 interface Address {
   id: string;
@@ -82,7 +82,7 @@ export default function AddressesPage() {
         setAddresses(prev => prev.map(addr => 
           addr.id === editingAddress.id ? { ...formData, id: editingAddress.id } : addr
         ));
-        toast({
+        showToast({
           title: "Address updated",
           description: "Your address has been updated successfully.",
         });
@@ -90,7 +90,7 @@ export default function AddressesPage() {
         // Add new address
         const newAddress = { ...formData, id: Date.now().toString() };
         setAddresses(prev => [...prev, newAddress]);
-        toast({
+        showToast({
           title: "Address added",
           description: "Your new address has been added successfully.",
         });
@@ -98,7 +98,7 @@ export default function AddressesPage() {
       
       resetForm();
     } catch (error) {
-      toast({
+      showToast({
         title: "Error",
         description: "Failed to save address. Please try again.",
         variant: "destructive",
@@ -127,7 +127,7 @@ export default function AddressesPage() {
   const handleDelete = async (addressId: string) => {
     if (confirm("Are you sure you want to delete this address?")) {
       setAddresses(prev => prev.filter(addr => addr.id !== addressId));
-      toast({
+      showToast({
         title: "Address deleted",
         description: "The address has been removed from your account.",
       });
@@ -139,7 +139,7 @@ export default function AddressesPage() {
       ...addr,
       isDefault: addr.id === addressId
     })));
-    toast({
+    showToast({
       title: "Default address updated",
       description: "Your default address has been changed.",
     });

@@ -28,7 +28,8 @@ export function Toaster() {
             className={cn(
               "pointer-events-auto rounded-md border bg-background p-3 shadow-md",
               "animate-in fade-in-0 zoom-in-95",
-              "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+              "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+              t.variant === "destructive" && "border-destructive/50 text-destructive-foreground bg-destructive"
             )}
           >
             {t.title && <div className="font-medium">{t.title}</div>}

@@ -82,6 +82,12 @@ export default function CartPage() {
           </div>
         </div>
       )}
+      <p className="text-muted-foreground mb-6">
+        You have not placed any orders yet. Start shopping to see your order history here.
+      </p>
+      <p className="text-gray-600 mt-2">
+        Stay up to date with your recent activity, orders, and account details below.
+      </p>
     </div>
   );
 }

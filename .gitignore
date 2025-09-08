@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# explicit stray secret file safeguard
+STRIPE_SECRET_KEY=*
+
 # vercel
 .vercel
 

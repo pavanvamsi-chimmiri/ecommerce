@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, ShoppingCart, Trash2, Eye } from "lucide-react";
-import { toast } from "@/lib/toast";
+import { showToast } from "@/lib/toast";
 import { useCartStore } from "@/lib/stores/cart-store";
 import Image from "next/image";
 import Link from "next/link";
@@ -103,12 +103,12 @@ export default function WishlistPage() {
         slug: item.product.slug,
       });
       
-      toast({
+      showToast({
         title: "Added to cart",
         description: `${item.product.title} has been added to your cart.`,
       });
     } catch (error) {
-      toast({
+      showToast({
         title: "Error",
         description: "Failed to add item to cart. Please try again.",
         variant: "destructive",
@@ -121,7 +121,7 @@ export default function WishlistPage() {
   const handleRemoveFromWishlist = async (itemId: string) => {
     if (confirm("Remove this item from your wishlist?")) {
       setWishlistItems(prev => prev.filter(item => item.id !== itemId));
-      toast({
+      showToast({
         title: "Removed from wishlist",
         description: "The item has been removed from your wishlist.",
       });
