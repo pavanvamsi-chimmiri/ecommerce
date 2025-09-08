@@ -6,10 +6,10 @@ import { useCartStore } from "@/lib/stores/cart-store";
 import Link from "next/link";
 
 export function CartSummary() {
-  const { getTotalItems, getTotalPrice, clearCart, closeCart } = useCartStore();
+  const { items, getTotalItems, clearCart, closeCart } = useCartStore();
   
   const totalItems = getTotalItems();
-  const totalPrice = getTotalPrice();
+  const subtotal = items.reduce((sum, it) => sum + ((it.title.toLowerCase().includes("graphic black tee") ? 0 : it.price) * it.quantity), 0);
 
   if (totalItems === 0) {
     return (
@@ -45,7 +45,7 @@ export function CartSummary() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Items ({totalItems})</span>
-            <span>${totalPrice.toFixed(2)}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
           
           <div className="flex justify-between text-sm">
@@ -55,13 +55,13 @@ export function CartSummary() {
           
           <div className="flex justify-between text-sm">
             <span>Tax</span>
-            <span>${(totalPrice * 0.08).toFixed(2)}</span>
+            <span>${(subtotal * 0.08).toFixed(2)}</span>
           </div>
           
           <div className="border-t pt-2">
             <div className="flex justify-between font-medium">
               <span>Total</span>
-              <span>${(totalPrice * 1.08).toFixed(2)}</span>
+              <span>${(subtotal * 1.08).toFixed(2)}</span>
             </div>
           </div>
         </div>

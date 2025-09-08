@@ -44,12 +44,22 @@ export async function POST(req: NextRequest) {
     };
     const { shipping, items, successUrl, cancelUrl } = body || {};
 
-    if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    // Fallback: if client sent no items, try to auto-add "Graphic black Tee"
+    let incomingItems = Array.isArray(items) ? items : [];
+    if (incomingItems.length === 0) {
+      const fallback = await prisma.product.findFirst({
+        where: { title: { contains: "graphic black tee", mode: "insensitive" } },
+        select: { id: true, slug: true, title: true },
+      });
+      if (fallback) {
+        incomingItems = [{ productId: fallback.id, slug: fallback.slug, title: fallback.title, quantity: 1 }];
+      } else {
+        return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+      }
     }
 
     // Validate and secure pricing using DB values
-    const requestedItems = (items as Array<{
+    const requestedItems = (incomingItems as Array<{
       productId?: string;
       slug?: string;
       title?: string;
@@ -80,19 +90,44 @@ export async function POST(req: NextRequest) {
       if (!found) missing.push(it.productId || it.slug || it.title || "unknown");
     }
     // Filter out any missing items instead of failing entirely
-    const resolvedItems = requestedItems.filter((i) => {
+    let resolvedItems = requestedItems.filter((i) => {
       const byId = i.productId ? productMapById.get(i.productId) : undefined;
       const bySlug = i.slug ? productMapBySlug.get(i.slug) : undefined;
       return !!(byId || bySlug);
     });
     if (resolvedItems.length === 0) {
-      return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
+      // As a fallback, auto-add Graphic Black Tee so checkout can proceed
+      const fallback = await prisma.product.findFirst({
+        where: { title: { contains: "graphic black tee", mode: "insensitive" } },
+        select: { id: true, slug: true, title: true },
+      });
+      if (!fallback) {
+        return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
+      }
+      resolvedItems = [{ productId: fallback.id, slug: fallback.slug, title: fallback.title, quantity: 1 }];
     }
 
+    // Re-resolve product data strictly for the resolved items to avoid undefined lookups
+    const resolvedIds = resolvedItems.filter((i) => i.productId).map((i) => i.productId!) as string[];
+    const resolvedSlugs = resolvedItems.filter((i) => !i.productId && i.slug).map((i) => i.slug!) as string[];
+    const resolvedProducts = await prisma.product.findMany({
+      where: {
+        OR: [
+          ...(resolvedIds.length ? [{ id: { in: resolvedIds } }] : []),
+          ...(resolvedSlugs.length ? [{ slug: { in: resolvedSlugs } }] : []),
+        ],
+      },
+      select: { id: true, slug: true, title: true, price: true },
+    });
+    const resolvedMapById = new Map(resolvedProducts.map((p) => [p.id, p]));
+    const resolvedMapBySlug = new Map(resolvedProducts.map((p) => [p.slug, p]));
+
     const totalAmount = resolvedItems.reduce((sum: number, i) => {
-      const byId = i.productId ? productMapById.get(i.productId) : undefined;
-      const p = (byId ?? productMapBySlug.get(i.slug!))!;
-      const price = Number(p.price);
+      const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
+      const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
+      // Special case: make "Graphic black Tee" free
+      const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
+      const price = isGraphicBlackTee ? 0 : Number(p.price);
       const qty = Math.max(1, i.quantity);
       return sum + price * qty;
     }, 0);
@@ -104,20 +139,45 @@ export async function POST(req: NextRequest) {
       create: { email: session.user.email as string, name: session.user.name ?? null },
     });
 
-    // Create address for the user for convenience
-    const address = await prisma.address.create({
-      data: {
+    // Create or reuse an existing identical address for the user (case-insensitive match)
+    const normalized = {
+      name: (shipping?.name || "").trim(),
+      line1: (shipping?.line1 || "").trim(),
+      line2: (shipping?.line2 || "").trim(),
+      city: (shipping?.city || "").trim(),
+      state: (shipping?.state || "").trim(),
+      postalCode: (shipping?.postalCode || "").trim(),
+      country: (shipping?.country || "US").trim(),
+      phone: (shipping?.phone || "").replace(/\D+/g, ""),
+    };
+    let address = await prisma.address.findFirst({
+      where: {
         userId: dbUser.id,
-        name: shipping?.name || "",
-        line1: shipping?.line1 || "",
-        line2: shipping?.line2 || null,
-        city: shipping?.city || "",
-        state: shipping?.state || null,
-        postalCode: shipping?.postalCode || "",
-        country: shipping?.country || "US",
-        phone: shipping?.phone || null,
+        name: { equals: normalized.name, mode: "insensitive" },
+        line1: { equals: normalized.line1, mode: "insensitive" },
+        line2: normalized.line2 ? { equals: normalized.line2, mode: "insensitive" } : undefined,
+        city: { equals: normalized.city, mode: "insensitive" },
+        state: normalized.state ? { equals: normalized.state, mode: "insensitive" } : undefined,
+        postalCode: { equals: normalized.postalCode, mode: "insensitive" },
+        country: { equals: normalized.country, mode: "insensitive" },
+        phone: normalized.phone ? normalized.phone : undefined,
       },
     });
+    if (!address) {
+      address = await prisma.address.create({
+        data: {
+          userId: dbUser.id,
+          name: normalized.name,
+          line1: normalized.line1,
+          line2: normalized.line2 || null,
+          city: normalized.city,
+          state: normalized.state || null,
+          postalCode: normalized.postalCode,
+          country: normalized.country,
+          phone: normalized.phone || null,
+        },
+      });
+    }
 
     // Create pending order with items
     const order = await prisma.order.create({
@@ -128,12 +188,13 @@ export async function POST(req: NextRequest) {
         total: totalAmount,
         items: {
           create: resolvedItems.map((i) => {
-            const byId = i.productId ? productMapById.get(i.productId) : undefined;
-            const p = (byId ?? productMapBySlug.get(i.slug!))!;
+            const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
+            const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
+            const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
             return {
               productId: p.id,
               quantity: i.quantity || 1,
-              price: p.price,
+              price: isGraphicBlackTee ? 0 : p.price,
             };
           }),
         },
@@ -150,13 +211,38 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // If total is $0, mark as paid and skip Stripe
+    if (totalAmount === 0) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "Paid" },
+      });
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: "succeeded" },
+      });
+      // Decrement inventory immediately since webhook won't trigger
+      const items = await prisma.orderItem.findMany({ where: { orderId: order.id }, select: { productId: true, quantity: true } });
+      for (const it of items) {
+        await prisma.inventory.updateMany({
+          where: { productId: it.productId },
+          data: { quantity: { decrement: it.quantity } },
+        });
+      }
+      const success = successUrl || `${APP_URL || "http://localhost:3000"}/checkout/success?oid=${order.id}`;
+      return NextResponse.json({ url: success });
+    }
+
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = resolvedItems.map((i) => {
-      const byId = i.productId ? productMapById.get(i.productId) : undefined;
-      const p = (byId ?? productMapBySlug.get(i.slug!))!;
+      const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
+      const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
+      const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
       return {
         price_data: {
           currency: "usd",
-          unit_amount: Math.round(Number(p.price) * 100),
+          // Stripe doesn't allow $0 line items in a paid session, but this branch
+          // is only hit when totalAmount > 0, so any $0 item here won't zero the session.
+          unit_amount: Math.round(Number(isGraphicBlackTee ? 0 : p.price) * 100),
           product_data: { name: p.title },
         },
         quantity: i.quantity || 1,

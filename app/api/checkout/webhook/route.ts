@@ -8,7 +8,7 @@ export const config = {
   },
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+// Defer Stripe initialization to request time to avoid build-time failures
 
 function buffer(req: Request): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
@@ -22,6 +22,11 @@ function buffer(req: Request): Promise<Buffer> {
 }
 
 export async function POST(req: NextRequest) {
+  const secretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET;
+  if (!secretKey) {
+    return NextResponse.json({ error: "Missing Stripe secret key" }, { status: 500 });
+  }
+  const stripe = new Stripe(secretKey);
   const sig = req.headers.get("stripe-signature");
   if (!sig) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
 

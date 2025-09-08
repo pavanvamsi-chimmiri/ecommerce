@@ -22,7 +22,7 @@ function SuccessInner() {
       {orderId && <p className="text-muted-foreground mb-6">Order ID: {orderId}</p>}
       <div className="space-x-3">
         <Button onClick={() => router.push("/orders")} variant="secondary">View orders</Button>
-        <Button onClick={() => router.push("/products")}>Continue shopping</Button>
+        <Button onClick={() => router.push("/")}>Continue shopping</Button>
       </div>
     </div>
   );

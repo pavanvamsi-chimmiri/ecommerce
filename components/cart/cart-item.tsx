@@ -52,7 +52,7 @@ export function CartItemComponent({ item }: CartItemComponentProps) {
             </h3>
           </Link>
           <p className="text-sm text-muted-foreground mt-1">
-            ${item.price.toFixed(2)}
+            {item.title.toLowerCase().includes("graphic black tee") ? "$0.00" : `$${item.price.toFixed(2)}`}
           </p>
         </div>
 
@@ -85,7 +85,10 @@ export function CartItemComponent({ item }: CartItemComponentProps) {
         {/* Total Price */}
         <div className="text-right">
           <p className="font-medium text-sm">
-            ${(item.price * item.quantity).toFixed(2)}
+            {(() => {
+              const unit = item.title.toLowerCase().includes("graphic black tee") ? 0 : item.price;
+              return `$${(unit * item.quantity).toFixed(2)}`;
+            })()}
           </p>
         </div>
 

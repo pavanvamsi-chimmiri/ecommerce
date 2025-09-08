@@ -48,18 +48,24 @@ export default function SignUpPage() {
     }
 
     try {
-      // For now, we'll just redirect to sign-in with a message
-      // In a real app, you'd create the user account here
-      setError("Account creation is not yet implemented. Please use the test credentials to sign in.");
-      
-      // Simulate account creation delay
-      setTimeout(() => {
-        setIsLoading(false);
-        router.push("/auth/signin?message=account-created");
-      }, 2000);
-      
-    } catch {
-      setError("An error occurred. Please try again.");
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to create account");
+      }
+      setIsLoading(false);
+      router.push("/auth/signin?message=account-created");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "An error occurred. Please try again.";
+      setError(message);
       setIsLoading(false);
     }
   };

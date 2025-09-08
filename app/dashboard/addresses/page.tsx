@@ -79,17 +79,31 @@ export default function AddressesPage() {
       
       if (editingAddress) {
         // Update existing address
-        setAddresses(prev => prev.map(addr => 
-          addr.id === editingAddress.id ? { ...formData, id: editingAddress.id } : addr
-        ));
+        setAddresses(prev => {
+          const normalized = (a: Address | typeof formData) => (
+            `${(a.name||"").trim().toLowerCase()}|${(a.line1||"").trim().toLowerCase()}|${(a.line2||"").trim().toLowerCase()}|${(a.city||"").trim().toLowerCase()}|${(a.state||"").trim().toLowerCase()}|${(a.postalCode||"").trim().toLowerCase()}|${(a.country||"").trim().toLowerCase()}|${(a.phone||"").replace(/\D+/g, "")}`
+          );
+          const updated = { ...formData, id: editingAddress.id } as Address;
+          const key = normalized(updated);
+          const dedup = prev
+            .map(addr => addr.id === editingAddress.id ? updated : addr)
+            .filter((addr, idx, arr) => arr.findIndex(x => normalized(x) === normalized(addr)) === idx);
+          return dedup;
+        });
         showToast({
           title: "Address updated",
           description: "Your address has been updated successfully.",
         });
       } else {
         // Add new address
-        const newAddress = { ...formData, id: Date.now().toString() };
-        setAddresses(prev => [...prev, newAddress]);
+        const newAddress = { ...formData, id: Date.now().toString() } as Address;
+        setAddresses(prev => {
+          const normalized = (a: Address) => (
+            `${(a.name||"").trim().toLowerCase()}|${(a.line1||"").trim().toLowerCase()}|${(a.line2||"").trim().toLowerCase()}|${(a.city||"").trim().toLowerCase()}|${(a.state||"").trim().toLowerCase()}|${(a.postalCode||"").trim().toLowerCase()}|${(a.country||"").trim().toLowerCase()}|${(a.phone||"").replace(/\D+/g, "")}`
+          );
+          const next = [...prev, newAddress];
+          return next.filter((addr, idx, arr) => arr.findIndex(x => normalized(x) === normalized(addr)) === idx);
+        });
         showToast({
           title: "Address added",
           description: "Your new address has been added successfully.",

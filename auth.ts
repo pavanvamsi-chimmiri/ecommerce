@@ -2,6 +2,8 @@ import NextAuth from "next-auth"
 // import Google from "next-auth/providers/google"
 // import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
+import { prisma } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
 import type { Session, User } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 
@@ -19,37 +21,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!email || !password) {
           return null;
         }
-
-        // For now, allow login with hardcoded credentials
-        // In production, you should hash passwords and compare them
-        if (email === "admin@example.com" && password === "admin") {
-          return {
-            id: "admin",
-            email: "admin@example.com",
-            name: "Admin",
-            role: "ADMIN",
-          };
-        }
-
-        if (email === "alice@example.com" && password === "alice") {
-          return {
-            id: "alice",
-            email: "alice@example.com",
-            name: "Alice",
-            role: "CUSTOMER",
-          };
-        }
-
-        if (email === "bob@example.com" && password === "bob") {
-          return {
-            id: "bob",
-            email: "bob@example.com",
-            name: "Bob",
-            role: "CUSTOMER",
-          };
-        }
-
-        return null;
+        // Look up user in DB
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user || !user.passwordHash) return null;
+        const ok = await bcrypt.compare(password, user.passwordHash);
+        if (!ok) return null;
+        return { id: user.id, email: user.email!, name: user.name ?? undefined, role: user.role as any };
       }
     }),
     // Google and GitHub providers temporarily disabled until OAuth credentials are configured

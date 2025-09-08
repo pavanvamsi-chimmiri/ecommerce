@@ -7,29 +7,42 @@ import { Package, Calendar, MapPin, CreditCard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function OrdersPage() {
   const session = await auth();
   
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return <div>Loading...</div>;
+  }
+
+  // Resolve DB user by email to ensure consistent id
+  const dbUser = await prisma.user.findUnique({ where: { email: session.user.email as string } });
+  if (!dbUser) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Order History</h1>
+          <p className="text-gray-600 mt-2">No account found for {session.user.email}</p>
+        </div>
+      </div>
+    );
   }
 
   // Get all orders for the user
   const orders = await prisma.order.findMany({
-    where: { userId: session.user.id },
+    where: { userId: dbUser.id },
     include: {
       items: {
         include: {
-          product: {
-            include: {
-              images: true
-            }
-          }
-        }
+          product: { include: { images: true } },
+        },
       },
-      address: true
+      address: true,
+      payment: true,
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   const getStatusColor = (status: string) => {

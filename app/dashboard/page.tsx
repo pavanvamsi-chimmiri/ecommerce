@@ -5,35 +5,38 @@ import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, MapPin, Heart } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const session = await auth();
   
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return <div>Loading...</div>;
   }
 
-  // Fetch user from DB to get createdAt
+  // Resolve DB user by email and fetch profile info
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { createdAt: true, name: true, email: true }
+    where: { email: session.user.email as string },
+    select: { id: true, createdAt: true, name: true, email: true }
   });
 
   // Get user statistics
   const [orderCount, addressCount, wishlistCount] = await Promise.all([
     prisma.order.count({
-      where: { userId: session.user.id }
+      where: { userId: user?.id || "" }
     }),
     prisma.address.count({
-      where: { userId: session.user.id }
+      where: { userId: user?.id || "" }
     }),
     prisma.wishlist.count({
-      where: { userId: session.user.id }
+      where: { userId: user?.id || "" }
     })
   ]);
 
   // Get recent orders
   const recentOrders = await prisma.order.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user?.id || "" },
     include: {
       items: {
         include: {
@@ -54,7 +57,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {session.user.name || session.user.email}!
+          Welcome back, {user?.name || user?.email || session.user.email}!
         </h1>
         {/* eslint-disable-next-line react/no-unescaped-entities */}
         <p className="text-gray-600 mt-2">

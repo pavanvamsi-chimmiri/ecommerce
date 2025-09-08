@@ -70,17 +70,6 @@ export default function CheckoutPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        // If some items are missing in DB, prune them from cart automatically
-        if (data?.error && data.error.includes("not found") && Array.isArray(data?.missing)) {
-          const missing: string[] = data.missing;
-          // Try to remove by productId or slug
-          for (const miss of missing) {
-            const match = items.find((it) => it.productId === miss || it.slug === miss || it.title === miss);
-            if (match) removeItem(match.productId);
-          }
-          setError("Some unavailable items were removed. Please try again.");
-          return;
-        }
         throw new Error(data?.error || "Failed to start checkout");
       }
       const data = await res.json();
@@ -171,16 +160,20 @@ export default function CheckoutPage() {
           <Card className="p-6 space-y-4">
             <h2 className="text-xl font-semibold">Order summary</h2>
             <div className="space-y-2">
-              {items.map((item) => (
+              {items.map((item) => {
+                const isGraphicBlackTee = item.title.toLowerCase().includes("graphic black tee");
+                const priceEach = isGraphicBlackTee ? 0 : item.price;
+                const lineTotal = priceEach * item.quantity;
+                return (
                 <div key={item.productId} className="flex items-center justify-between text-sm">
                   <span>{item.title} × {item.quantity}</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span>${lineTotal.toFixed(2)}</span>
                 </div>
-              ))}
+              );})}
             </div>
             <div className="border-t pt-4 flex items-center justify-between font-medium">
               <span>Total ({totalItems} items)</span>
-              <span>${totalPrice.toFixed(2)}</span>
+              <span>${items.reduce((sum, item) => sum + ((item.title.toLowerCase().includes("graphic black tee") ? 0 : item.price) * item.quantity), 0).toFixed(2)}</span>
             </div>
           </Card>
         </div>

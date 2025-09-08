@@ -224,7 +224,13 @@ async function main() {
     }
   }
 
-  console.log("Seeded: categories (3), products (6), users (3)");
+  // Ensure every product has at least 100 units available
+  await prisma.inventory.updateMany({
+    where: { quantity: { lt: 100 } },
+    data: { quantity: 100 },
+  });
+
+  console.log("Seeded: categories, products, users. Ensured inventory >= 100 per product");
 }
 
 main()

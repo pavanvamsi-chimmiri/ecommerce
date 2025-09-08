@@ -2,9 +2,12 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function OrdersPage() {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold mb-2">Orders</h1>
@@ -13,8 +16,20 @@ export default async function OrdersPage() {
     );
   }
 
+  // Resolve DB user by email to ensure we use the persistent database user id
+  const dbUser = await prisma.user.findUnique({ where: { email: session.user.email as string } });
+
+  if (!dbUser) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-semibold mb-2">Orders</h1>
+        <p className="text-muted-foreground">No account found for {session.user.email}.</p>
+      </div>
+    );
+  }
+
   const orders = await prisma.order.findMany({
-    where: { userId: session.user.id },
+    where: { userId: dbUser.id },
     include: { items: { include: { product: { select: { title: true } } } }, payment: true },
     orderBy: { createdAt: "desc" },
   });
