@@ -77,11 +77,11 @@
   - [X] Shipping information
   - [X] Payment integration (Stripe)
   - [X] Order confirmation
-- [ ] User dashboard:
-  - Order history
-  - Profile management
-  - Saved addresses
-  - Wishlist
+- [X] User dashboard :
+  - [X] Order history
+  - [X] Profile management
+  - [X] Saved addresses
+  - [X] Wishlist    
 
 ### 4. Admin Dashboard [ ]
 

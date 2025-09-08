@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,10 +21,21 @@ export function Header() {
   const { data: session } = useSession();
   const { getTotalItems, openCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push("/products");
+    }
+  };
 
   if (!mounted) {
     return (
@@ -50,13 +62,15 @@ export function Header() {
 
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-6">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
                 className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
+            </form>
           </div>
 
           {/* Right Side */}
@@ -66,8 +80,14 @@ export function Header() {
               variant="ghost" 
               size="icon" 
               className="relative"
+              onClick={openCart}
             >
               <ShoppingCart className="h-5 w-5" />
+              {getTotalItems() > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">
+                  {getTotalItems()}
+                </Badge>
+              )}
             </Button>
 
             {/* User Menu */}
@@ -80,13 +100,16 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/orders">Orders</Link>
+                    <Link href="/dashboard/orders">Orders</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/wishlist">Wishlist</Link>
+                    <Link href="/dashboard/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/wishlist">Wishlist</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut()}>
                     Sign Out
@@ -105,6 +128,9 @@ export function Header() {
             </Button>
           </div>
         </div>
+        
+        {/* Cart Sidebar */}
+        <CartSidebar />
       </header>
     );
   }
@@ -133,13 +159,15 @@ export function Header() {
 
         {/* Search Bar */}
         <div className="flex-1 max-w-md mx-6">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
               className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </form>
         </div>
 
         {/* Right Side */}
@@ -169,13 +197,16 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
+                  <Link href="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/orders">Orders</Link>
+                  <Link href="/dashboard/orders">Orders</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/wishlist">Wishlist</Link>
+                  <Link href="/dashboard/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/wishlist">Wishlist</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => signOut()}>
                   Sign Out

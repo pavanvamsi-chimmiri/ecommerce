@@ -31,7 +31,24 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const stock = get("stock") === "1";
 
   const where: import("@prisma/client").Prisma.ProductWhereInput = {};
-  if (q) where.title = { contains: q, mode: "insensitive" };
+  if (q) {
+    // Normalize search terms for better matching
+    const normalizedQuery = q.toLowerCase().replace(/[-\s]/g, '');
+    const searchTerms = [
+      q, // Original query
+      normalizedQuery, // Normalized query
+      q.replace(/[-\s]/g, ''), // Query without hyphens/spaces
+    ];
+    
+    // Remove duplicates
+    const uniqueTerms = [...new Set(searchTerms)];
+    
+    where.OR = uniqueTerms.flatMap(term => [
+      { title: { contains: term, mode: "insensitive" } },
+      { description: { contains: term, mode: "insensitive" } },
+      { category: { name: { contains: term, mode: "insensitive" } } },
+    ]);
+  }
   if (categorySlug) where.category = { is: { slug: categorySlug } };
   if (typeof min === "number" || typeof max === "number") {
     const priceFilter: import("@prisma/client").Prisma.DecimalFilter = {};
@@ -49,7 +66,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const products = await prisma.product.findMany({
     where,
-    include: { images: true, inventory: true },
+    include: { images: true, inventory: true, category: true },
     orderBy,
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
