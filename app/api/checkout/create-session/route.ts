@@ -64,42 +64,28 @@ export async function POST(req: NextRequest) {
     }));
     const byIds = requestedItems.filter((i) => i.productId).map((i) => i.productId as string);
     const bySlugs = requestedItems.filter((i) => !i.productId && i.slug).map((i) => i.slug as string);
-    const byTitles = requestedItems
-      .filter((i) => !i.productId && !i.slug && i.title)
-      .map((i) => String(i.title)) as string[];
-
     const orConditions: Prisma.ProductWhereInput[] = [];
     if (byIds.length) orConditions.push({ id: { in: byIds } });
     if (bySlugs.length) orConditions.push({ slug: { in: bySlugs } });
-    if (byTitles.length) {
-      // Build case-insensitive OR for each title
-      for (const t of byTitles) {
-        orConditions.push({ title: { equals: t, mode: "insensitive" } });
-      }
-    }
-
     const products = await prisma.product.findMany({
       where: orConditions.length ? { OR: orConditions } : undefined,
       select: { id: true, slug: true, title: true, price: true },
     });
     const productMapById = new Map(products.map((p) => [p.id, p]));
     const productMapBySlug = new Map(products.map((p) => [p.slug, p]));
-    const productMapByTitleLower = new Map(products.map((p) => [p.title.toLowerCase(), p]));
 
     const missing: string[] = [];
     for (const it of requestedItems) {
       const byId = it.productId ? productMapById.get(it.productId) : undefined;
       const bySlug = it.slug ? productMapBySlug.get(it.slug) : undefined;
-      const byTitle = it.title ? productMapByTitleLower.get(String(it.title).toLowerCase()) : undefined;
-      const found = byId || bySlug || byTitle;
+      const found = byId || bySlug;
       if (!found) missing.push(it.productId || it.slug || it.title || "unknown");
     }
     // Filter out any missing items instead of failing entirely
     const resolvedItems = requestedItems.filter((i) => {
       const byId = i.productId ? productMapById.get(i.productId) : undefined;
       const bySlug = i.slug ? productMapBySlug.get(i.slug) : undefined;
-      const byTitle = i.title ? productMapByTitleLower.get(String(i.title).toLowerCase()) : undefined;
-      return !!(byId || bySlug || byTitle);
+      return !!(byId || bySlug);
     });
     if (resolvedItems.length === 0) {
       return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
@@ -113,23 +99,16 @@ export async function POST(req: NextRequest) {
         OR: [
           ...(resolvedIds.length ? [{ id: { in: resolvedIds } }] : []),
           ...(resolvedSlugs.length ? [{ slug: { in: resolvedSlugs } }] : []),
-          // include exact case-insensitive title matches for titles we received
-          ...requestedItems
-            .filter((i) => i.title)
-            .map((i) => ({ title: { equals: String(i.title), mode: "insensitive" } as Prisma.StringFilter })),
         ],
       },
       select: { id: true, slug: true, title: true, price: true },
     });
     const resolvedMapById = new Map(resolvedProducts.map((p) => [p.id, p]));
     const resolvedMapBySlug = new Map(resolvedProducts.map((p) => [p.slug, p]));
-    const resolvedMapByTitleLower = new Map(resolvedProducts.map((p) => [p.title.toLowerCase(), p]));
 
     const totalAmount = resolvedItems.reduce((sum: number, i) => {
       const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
-      const bySlug = i.slug ? resolvedMapBySlug.get(i.slug) : undefined;
-      const byTitle = i.title ? resolvedMapByTitleLower.get(String(i.title).toLowerCase()) : undefined;
-      const p = (byId ?? bySlug ?? byTitle)!;
+      const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
       // Special case: make "Graphic black Tee" free
       const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
       const price = isGraphicBlackTee ? 0 : Number(p.price);
@@ -194,9 +173,7 @@ export async function POST(req: NextRequest) {
         items: {
           create: resolvedItems.map((i) => {
             const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
-            const bySlug = i.slug ? resolvedMapBySlug.get(i.slug) : undefined;
-            const byTitle = i.title ? resolvedMapByTitleLower.get(String(i.title).toLowerCase()) : undefined;
-            const p = (byId ?? bySlug ?? byTitle)!;
+            const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
             const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
             return {
               productId: p.id,
@@ -242,9 +219,7 @@ export async function POST(req: NextRequest) {
 
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = resolvedItems.map((i) => {
       const byId = i.productId ? resolvedMapById.get(i.productId) : undefined;
-      const bySlug = i.slug ? resolvedMapBySlug.get(i.slug) : undefined;
-      const byTitle = i.title ? resolvedMapByTitleLower.get(String(i.title).toLowerCase()) : undefined;
-      const p = (byId ?? bySlug ?? byTitle)!;
+      const p = (byId ?? resolvedMapBySlug.get(i.slug!))!;
       const isGraphicBlackTee = p.title?.toLowerCase().includes("graphic black tee");
       return {
         price_data: {
