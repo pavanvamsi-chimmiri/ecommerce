@@ -88,7 +88,46 @@ export async function POST(req: NextRequest) {
       return !!(byId || bySlug);
     });
     if (resolvedItems.length === 0) {
-      return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
+      // Second-pass fuzzy match by title (insensitive) to improve resiliency
+      const titles = Array.from(new Set(requestedItems.map((i) => i.title).filter(Boolean))) as string[];
+      if (titles.length) {
+        const fuzzy = await prisma.product.findMany({
+          where: { OR: titles.map((t) => ({ title: { contains: t, mode: "insensitive" } })) },
+          select: { id: true, slug: true, title: true },
+        });
+        if (fuzzy.length) {
+          const candidates: { productId: string | undefined; slug: string | undefined; title: string | undefined; quantity: number }[] = [];
+          for (const i of requestedItems) {
+            const key = (i.title || "").toLowerCase();
+            const p = key ? fuzzy.find((fp) => fp.title.toLowerCase().includes(key)) : undefined;
+            if (p) {
+              candidates.push({ productId: p.id, slug: p.slug, title: p.title, quantity: i.quantity || 1 });
+            }
+          }
+          if (candidates.length) {
+            // Override resolvedItems with fuzzy-matched candidates
+            const tmpByIds = candidates.filter((i) => i.productId).map((i) => i.productId!) as string[];
+            const tmpBySlugs = candidates.filter((i) => !i.productId && i.slug).map((i) => i.slug!) as string[];
+            const tmpProducts = await prisma.product.findMany({
+              where: {
+                OR: [
+                  ...(tmpByIds.length ? [{ id: { in: tmpByIds } }] : []),
+                  ...(tmpBySlugs.length ? [{ slug: { in: tmpBySlugs } }] : []),
+                ],
+              },
+              select: { id: true, slug: true, title: true, price: true },
+            });
+            // If still empty, fail; otherwise continue with candidates
+            if (tmpProducts.length) {
+              // replace requestedItems/resolvedItems context
+              resolvedItems.splice(0, resolvedItems.length, ...candidates);
+            }
+          }
+        }
+      }
+      if (resolvedItems.length === 0) {
+        return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
+      }
     }
 
     // Re-resolve product data strictly for the resolved items to avoid undefined lookups
