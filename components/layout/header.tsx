@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Search, ShoppingCart, User, Menu } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
@@ -94,11 +95,18 @@ export function Header() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
                     <User className="h-5 w-5" />
+                    <span className="hidden sm:inline max-w-[12rem] truncate">
+                      {session.user?.name || session.user?.email}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <div className="px-2 py-1.5 text-sm font-medium">
+                    {session.user?.name || session.user?.email}
+                  </div>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
