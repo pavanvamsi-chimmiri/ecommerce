@@ -44,18 +44,10 @@ export async function POST(req: NextRequest) {
     };
     const { shipping, items, successUrl, cancelUrl } = body || {};
 
-    // Fallback: if client sent no items, try to auto-add "Graphic black Tee"
-    let incomingItems = Array.isArray(items) ? items : [];
+    // Validate incoming items
+    const incomingItems = Array.isArray(items) ? items : [];
     if (incomingItems.length === 0) {
-      const fallback = await prisma.product.findFirst({
-        where: { title: { contains: "graphic black tee", mode: "insensitive" } },
-        select: { id: true, slug: true, title: true },
-      });
-      if (fallback) {
-        incomingItems = [{ productId: fallback.id, slug: fallback.slug, title: fallback.title, quantity: 1 }];
-      } else {
-        return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-      }
+      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
     // Validate and secure pricing using DB values
@@ -90,21 +82,13 @@ export async function POST(req: NextRequest) {
       if (!found) missing.push(it.productId || it.slug || it.title || "unknown");
     }
     // Filter out any missing items instead of failing entirely
-    let resolvedItems = requestedItems.filter((i) => {
+    const resolvedItems = requestedItems.filter((i) => {
       const byId = i.productId ? productMapById.get(i.productId) : undefined;
       const bySlug = i.slug ? productMapBySlug.get(i.slug) : undefined;
       return !!(byId || bySlug);
     });
     if (resolvedItems.length === 0) {
-      // As a fallback, auto-add Graphic Black Tee so checkout can proceed
-      const fallback = await prisma.product.findFirst({
-        where: { title: { contains: "graphic black tee", mode: "insensitive" } },
-        select: { id: true, slug: true, title: true },
-      });
-      if (!fallback) {
-        return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
-      }
-      resolvedItems = [{ productId: fallback.id, slug: fallback.slug, title: fallback.title, quantity: 1 }];
+      return NextResponse.json({ error: "Some products not found in database", missing }, { status: 400 });
     }
 
     // Re-resolve product data strictly for the resolved items to avoid undefined lookups
